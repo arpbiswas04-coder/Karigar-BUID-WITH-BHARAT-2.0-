@@ -1,0 +1,7 @@
+import React,{useState} from 'react';
+export default function ProductGallery({product}){
+ const [selected,setSelected]=useState(0);
+ const entries=[...product.images.map((url,i)=>({url,label:`Photo ${i+1}`,video:false})),...(product.media.productVideo?[{url:product.media.productVideo,label:'Showcase Video',video:true}]:[]),...(product.media.processVideo?[{url:product.media.processVideo,label:'Making Process',video:true}]:[])];
+ const current=entries[selected]||entries[0];
+ return <><div className="relative bg-surface-container-lowest rounded-2xl overflow-hidden aspect-[5/4] flex items-center justify-center border border-outline-variant">{current?.video?<video key={current.url} src={current.url} controls playsInline preload="metadata" className="w-full h-full object-contain"/>:current?<img src={current.url} alt={product.name+' ? '+current.label} className="w-full h-full object-contain"/>:<p>No media available</p>}</div><div className="flex flex-wrap gap-3">{entries.map((entry,i)=><button key={entry.url+i} type="button" onClick={()=>setSelected(i)} aria-pressed={selected===i} className="border border-outline-variant rounded-xl overflow-hidden w-24 bg-surface-container-lowest">{!entry.video&&<img src={entry.url} alt="" className="w-full h-16 object-cover"/>}<span className="block text-xs p-2">{entry.label}</span></button>)}</div>{product.evidence.live_capture&&<p className="text-sm">Captured through KARIGAR</p>}</>;
+}

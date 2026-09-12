@@ -1,0 +1,56 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+*.local
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+log.md
+public/uploads/products/
+
+# Environment / secrets
+.env
+.env.*
+!.env.example
+
+# Python virtual environment
+.venv/
+venv/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# AI service cache / local generated files
+ai-service/.cache/
+
+# Local database
+prisma/dev.db
+DEMO_ACCOUNTS.local.md
+
+# Local database backups
+prisma/*.db.backup
+
+# Runtime avatar uploads
+public/uploads/avatars/*
+!public/uploads/avatars/.gitkeep

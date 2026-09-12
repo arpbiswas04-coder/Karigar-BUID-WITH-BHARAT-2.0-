@@ -1,0 +1,42 @@
+{
+  "name": "karigar",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "dev:ai": "node scripts/start_ai.mjs",
+    "build": "vite build",
+    "start": "node server/server.js",
+    "lint": "oxlint",
+    "preview": "vite preview",
+    "seed:artisans": "node prisma/seed.js",
+    "validate:artisans": "node scripts/validate_artisans.mjs",
+    "seed": "node prisma/seed.js"
+  },
+  "prisma": {
+    "seed": "node prisma/seed.js"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.19.3",
+    "@tailwindcss/vite": "^4.3.3",
+    "bcryptjs": "^3.0.3",
+    "gsap": "^3.15.0",
+    "i18next": "^26.4.2",
+    "jsonwebtoken": "^9.0.3",
+    "lucide-react": "^1.41.0",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "react-i18next": "^17.0.13",
+    "react-router-dom": "^7.18.3",
+    "tailwindcss": "^4.3.3"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.4",
+    "@vitejs/plugin-react": "^6.1.0",
+    "oxlint": "^1.79.0",
+    "prisma": "^6.19.3",
+    "vite": "^8.2.2"
+  }
+}
