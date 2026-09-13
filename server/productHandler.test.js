@@ -23,6 +23,7 @@ test('authenticated publishing persists files and SQLite rows; retries do not du
     await prisma.$executeRawUnsafe("INSERT INTO User (id) VALUES ('artisan-test')");
     const sql=await readFile(new URL('../prisma/migrations/20260911130000_add_products/migration.sql',import.meta.url),'utf8');
     for(const statement of sql.split(';').filter(x=>x.trim()))await prisma.$executeRawUnsafe(statement);
+    await prisma.$executeRawUnsafe('ALTER TABLE "Product" ADD COLUMN "isActive" BOOLEAN NOT NULL DEFAULT true');
     server=http.createServer((req,res)=>handleProducts(req,res,{prisma,mediaDir,verifyMedia:async()=>allowMedia,user:{id:req.headers['x-test-user']||'artisan-test',role:'ARTISAN',isActive:true}}));
     await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));const url=`http://127.0.0.1:${server.address().port}`;
     function body(){const form=new FormData();form.append('listing',JSON.stringify(listing));form.append('evidence',JSON.stringify(evidence));form.append('primary_index','0');form.append('images',new Blob([Buffer.from('89504e470d0a1a0a0000000d49484452','hex')],{type:'image/png'}),'image.png');return form;}

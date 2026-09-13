@@ -218,7 +218,7 @@ export async function createOrder({ req, res, prisma, body }) {
           throw new Error('Product not found');
         }
 
-        if (!product.artisan?.isActive) {
+        if (!product.isActive || !product.artisan?.isActive) {
           throw new Error(
             `The artisan for "${product.title}" is currently unavailable`
           );
@@ -440,7 +440,7 @@ export async function confirmTestPayment({
       // Stock is committed with payment, atomically; repeated confirmation exits above.
       const items=await tx.orderItem.findMany({where:{orderId:order.id}});
       for(const item of items) {
-        const updated=await tx.product.updateMany({where:{id:item.productId,stock:{gte:item.quantity}},data:{stock:{decrement:item.quantity}}});
+        const updated=await tx.product.updateMany({where:{id:item.productId,isActive:true,stock:{gte:item.quantity}},data:{stock:{decrement:item.quantity}}});
         if(updated.count!==1)throw Object.assign(new Error('A product no longer has enough stock. Payment was not confirmed.'),{status:409});
       }
       const transactionId =

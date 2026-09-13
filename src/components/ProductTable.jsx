@@ -1,16 +1,13 @@
 import { formatEvidenceScore } from '../utils/evidenceFormat.js';
 import { categoryImage } from '../data/demoImages';
-import React, { useState } from 'react';
+import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Eye, Edit3, Trash2, Award, CheckCircle2 } from 'lucide-react';
-import { useSeller } from '../context/SellerContext';
 import { formatCurrency, formatNumber, toLocaleDigits } from '../utils/formatters';
 import { translateCategory, translateCraftType, translateState, translateCollectionTitle } from '../utils/localizedDisplay';
 
-export default function ProductTable({ products, onViewProduct, onEditProduct }) {
+export default function ProductTable({ products, onViewProduct, onEditProduct, onDeleteProduct }) {
   const { t, i18n } = useTranslation();
-  const { deleteProduct } = useSeller();
-  const [deleteConfirmId, setDeleteConfirmId] = useState(null);
 
   const getStatusBadge = (status) => {
     switch (status?.toLowerCase()) {
@@ -53,11 +50,6 @@ export default function ProductTable({ products, onViewProduct, onEditProduct })
           </span>
         );
     }
-  };
-
-  const handleDelete = (id) => {
-    deleteProduct(id);
-    setDeleteConfirmId(null);
   };
 
   return (
@@ -146,7 +138,7 @@ export default function ProductTable({ products, onViewProduct, onEditProduct })
                     type="button"
                     disabled={!onViewProduct}
                     onClick={() => onViewProduct && onViewProduct(item)}
-                    title={t('common.view')}
+                    title={t('common.view')} aria-label={`View product: ${item.name}`}
                     className="p-1.5 text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-seller-muted dark:hover:bg-seller-card rounded-md transition-colors"
                   >
                     <Eye className="w-4 h-4" />
@@ -154,42 +146,15 @@ export default function ProductTable({ products, onViewProduct, onEditProduct })
 
                   <button
                     type="button"
-                    disabled={item.persisted||!onEditProduct}
+                    disabled={!onEditProduct}
                     onClick={() => onEditProduct && onEditProduct(item)}
-                    title={t('common.edit')}
+                    title={t('common.edit')} aria-label={`Edit product: ${item.name}`}
                     className="p-1.5 text-gray-500 hover:text-emerald-700 dark:text-gray-400 dark:hover:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/60 rounded-md transition-colors"
                   >
                     <Edit3 className="w-4 h-4" />
                   </button>
 
-                  {deleteConfirmId === item.id ? (
-                    <div className="flex items-center gap-1">
-                      <button
-                        type="button"
-                        onClick={() => handleDelete(item.id)}
-                        className="text-[11px] bg-red-600 text-white px-2 py-1 rounded font-semibold hover:bg-red-700"
-                      >
-                        {t('common.confirmed')}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setDeleteConfirmId(null)}
-                        className="text-[11px] text-gray-500 dark:text-gray-400 hover:text-gray-700 px-1"
-                      >
-                        ✕
-                      </button>
-                    </div>
-                  ) : (
-                    <button
-                      type="button"
-                      disabled={item.persisted}
-                      onClick={() => setDeleteConfirmId(item.id)}
-                      title={t('common.delete')}
-                      className="p-1.5 text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/40 rounded-md transition-colors"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  )}
+                  <button type="button" disabled={!onDeleteProduct} onClick={()=>onDeleteProduct(item)} title="Delete product" aria-label={`Delete product: ${item.name}`} className="p-1.5 text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/40 rounded-md transition-colors"><Trash2 className="w-4 h-4"/></button>
                 </div>
               </td>
             </tr>

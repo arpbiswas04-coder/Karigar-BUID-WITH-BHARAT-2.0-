@@ -60,7 +60,7 @@ export async function handleAuthRequest(req, res) {
   };
 
   // Product multipart requests must bypass the legacy JSON/avatar body reader.
-  if(pathname === '/api/products') {
+  if(pathname === '/api/products' || pathname.startsWith('/api/products/')) {
     let user;
     try {
       const decoded=jwt.verify(extractToken(req)||'',JWT_SECRET);

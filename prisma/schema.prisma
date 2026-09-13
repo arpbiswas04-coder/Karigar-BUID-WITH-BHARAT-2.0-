@@ -41,6 +41,7 @@ model User {
 }
 
 model Product {
+  isActive       Boolean  @default(true)
   id             String   @id @default(cuid())
   artisanId      String
   artisan        User     @relation(fields: [artisanId], references: [id])

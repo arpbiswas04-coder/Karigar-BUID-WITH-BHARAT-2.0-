@@ -31,3 +31,8 @@ export function publishProduct(draft,key,token) {
 }
 export function listProducts(token){return safeFetch('/api/products',{headers:{Authorization:`Bearer ${token}`}});}
 export function productMediaUrl(url){return url?.startsWith('/uploads/')?`${API_BASE_URL}${url}`:url;}
+
+export function getSellerProduct(id,token){return safeFetch(`/api/products/${encodeURIComponent(id)}`,{headers:{Authorization:`Bearer ${token}`}});}
+function changed(result){window.dispatchEvent(new Event('karigar-products-changed'));return result;}
+export function updateSellerProduct(id,details,token){return safeFetch(`/api/products/${encodeURIComponent(id)}`,{method:'PATCH',headers:{Authorization:`Bearer ${token}`,'Content-Type':'application/json'},body:JSON.stringify(details)}).then(changed);}
+export function archiveSellerProduct(id,token){return safeFetch(`/api/products/${encodeURIComponent(id)}`,{method:'DELETE',headers:{Authorization:`Bearer ${token}`}}).then(changed);}

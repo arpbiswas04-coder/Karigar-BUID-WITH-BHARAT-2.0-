@@ -6,6 +6,7 @@ import path from 'node:path';
 import os from 'node:os';
 import jwt from 'jsonwebtoken';
 import {PrismaClient} from '@prisma/client';
+import {handleProducts} from './productHandler.js';
 import {handleMarketplace} from './marketplaceHandler.js';
 import {createOrder,confirmTestPayment,getBuyerOrders} from './orderHandler.js';
 
@@ -25,6 +26,7 @@ test('catalog, checkout, stock, reviews and seller isolation share SQLite record
     let body='';for await(const chunk of req)body+=chunk;return createOrder({req,res,prisma,body:JSON.parse(body)});
    }
    const user=req.headers['x-test-user']?await prisma.user.findUnique({where:{id:req.headers['x-test-user']}}):null;
+   if(req.url.startsWith("/api/products"))return handleProducts(req,res,{prisma,user});
    return handleMarketplace(req,res,{prisma,user});
   });await new Promise(r=>server.listen(0,'127.0.0.1',r));const base=`http://127.0.0.1:${server.address().port}`;
   async function request(url,user,body,method){const token=user?jwt.sign({id:user},process.env.JWT_SECRET||'karigar_secret_jwt_artisan_2026_key'):null;const r=await fetch(base+url,{method:method||(body?'POST':'GET'),headers:{...(user?{'x-test-user':user,Authorization:`Bearer ${token}`} :{}),'Content-Type':'application/json'},...(body?{body:JSON.stringify(body)}:{})});return {status:r.status,data:await r.json()};}
@@ -47,5 +49,31 @@ test('catalog, checkout, stock, reviews and seller isolation share SQLite record
   assert.equal(await prisma.review.count(),1);const detail=await request('/api/catalog/products/product');assert.equal(detail.data.product.rating,5);assert.equal(detail.data.product.reviewsCount,1);
   const customers=(await request('/api/seller/activity','a')).data.customers;assert.equal(customers[0].review.text,'Updated review');assert.equal((await request('/api/seller/activity','b')).data.customers.length,0);
   const publicReviews=await request(endpoint);assert.equal(JSON.stringify(publicReviews).includes('@test.invalid'),false);assert.equal(JSON.stringify(publicReviews).includes('private'),false);
+  // Seller actions use real product IDs, preserve snapshots, and affect the public catalog.
+  assert.equal((await request('/api/products/product')).status,401);
+  assert.equal((await request('/api/products/product','p')).status,403);
+  assert.equal((await request('/api/products/product','b')).status,404);
+  assert.equal((await request('/api/products/product','a')).data.product.title,'Clay pot');
+  const before=await prisma.product.findUnique({where:{id:'product'}});
+  assert.equal((await request('/api/products/product','b',{price:850},'PATCH')).status,404);
+  for(const patch of [{price:-1},{stock:1.5},{category:'Unknown'},{media:{images:[]}}])assert.equal((await request('/api/products/product','a',patch,'PATCH')).status,422);
+  const edited=await request('/api/products/product','a',{title:'Updated clay pot',price:850,stock:5},'PATCH');assert.equal(edited.status,200);assert.equal(edited.data.product.price,850);
+  const after=await prisma.product.findUnique({where:{id:'product'}});assert.equal(after.mediaJson,before.mediaJson);assert.equal(after.evidenceJson,before.evidenceJson);
+  assert.equal((await request('/api/products','a')).data.products[0].stock,5);
+  assert.equal((await request('/api/catalog/products/product')).data.product.price,850);
+  assert.equal((await request('/api/catalog/products')).data.products[0].title,'Updated clay pot');
+  const pending=await request('/api/orders','p',body);assert.equal(pending.status,201);
+  assert.equal((await request('/api/products/product','b',undefined,'DELETE')).status,404);
+  assert.equal((await request('/api/products/product','a',undefined,'DELETE')).status,200);
+  assert.equal((await request('/api/products','a')).data.products.length,0);
+  assert.equal((await request('/api/catalog/products')).data.products.length,0);
+  assert.equal((await request('/api/catalog/products/product')).status,404);
+  assert.equal((await request('/api/artisans/a/products')).data.products.length,0);
+  assert.equal((await request('/api/artisans/a')).data.artisan.productCount,0);
+  assert.equal((await request(`/api/orders/${pending.data.order.id}/payment/confirm`,'p',{})).status,409);
+  assert.equal((await prisma.product.findUnique({where:{id:'product'}})).stock,5);
+  assert.equal(await prisma.order.count(),2);assert.equal(await prisma.orderItem.count(),2);assert.equal(await prisma.review.count(),1);
+  assert.equal((await request('/api/seller/activity','a')).data.customers[0].review.text,'Updated review');
+
  }finally{if(server){server.closeAllConnections();await new Promise(r=>server.close(r));}await prisma.$disconnect();await rm(root,{recursive:true,force:true});}
 });

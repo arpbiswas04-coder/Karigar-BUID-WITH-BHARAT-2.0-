@@ -54,7 +54,7 @@ export async function handleMarketplace(req,res,{prisma,user}) {
     }
     const reviewMatch=path.match(/^\/api\/catalog\/products\/([^/]+)\/reviews(?:\/([^/]+))?$/);
     if(reviewMatch){
-      const product=await prisma.product.findFirst({where:{id:reviewMatch[1],artisan:{isActive:true}}});if(!product)return send(404,{error:'Product not found.'});
+      const product=await prisma.product.findFirst({where:{id:reviewMatch[1],isActive:true,artisan:{isActive:true}}});if(!product)return send(404,{error:'Product not found.'});
       if(req.method==='GET')return send(200,{reviews:(await prisma.review.findMany({where:{productId:product.id},include:reviewInclude,orderBy:{updatedAt:'desc'}})).map(publicReview)});
       if(!['POST','PATCH'].includes(req.method))return send(405,{error:'Method not allowed.'});
       if(!user)return send(401,{error:'Please sign in.'});if(user.role!=='PATRON'||user.id===product.artisanId)return send(403,{error:'Only patrons can review products.'});
@@ -67,13 +67,13 @@ export async function handleMarketplace(req,res,{prisma,user}) {
     const artisanMatch=path.match(/^\/api\/artisans(?:\/([^/]+)(\/products)?)?$/);
     if(artisanMatch) {
       const id=artisanMatch[1];
-      if(artisanMatch[2])return send(200,{products:(await prisma.product.findMany({where:{artisanId:id,artisan:{isActive:true,role:'ARTISAN'}},include:productInclude,orderBy:{createdAt:'desc'}})).map(catalogProduct)});
-      const artisans=await prisma.user.findMany({where:{role:'ARTISAN',isActive:true,...(id?{id}:{})},select:{...artisanSelect,_count:{select:{products:true}}},orderBy:{createdAt:'asc'}});
+      if(artisanMatch[2])return send(200,{products:(await prisma.product.findMany({where:{artisanId:id,isActive:true,artisan:{isActive:true,role:'ARTISAN'}},include:productInclude,orderBy:{createdAt:'desc'}})).map(catalogProduct)});
+      const artisans=await prisma.user.findMany({where:{role:'ARTISAN',isActive:true,...(id?{id}:{})},select:{...artisanSelect,_count:{select:{products:{where:{isActive:true}}}}},orderBy:{createdAt:'asc'}});
       if(id)return artisans.length?send(200,{artisan:publicArtisan(artisans[0])}):send(404,{error:'Artisan not found.'});
       return send(200,{artisans:artisans.map(publicArtisan)});
     }
     const match=path.match(/^\/api\/catalog\/products(?:\/([^/]+))?$/);
-    if(match){const products=await prisma.product.findMany({where:{artisan:{isActive:true,role:'ARTISAN'},...(match[1]?{id:match[1]}:{})},include:productInclude,orderBy:{createdAt:'desc'}});
+    if(match){const products=await prisma.product.findMany({where:{isActive:true,artisan:{isActive:true,role:'ARTISAN'},...(match[1]?{id:match[1]}:{})},include:productInclude,orderBy:{createdAt:'desc'}});
       if(match[1])return products.length?send(200,{product:catalogProduct(products[0])}):send(404,{error:'Product not found.'});return send(200,{products:products.map(catalogProduct)});}
     return send(404,{error:'Not found.'});
   } catch(error){console.error('[marketplace]',error.name,error.code||error.message);return send(error.status||500,{error:error.status?error.message:'Marketplace request could not be completed.'});}

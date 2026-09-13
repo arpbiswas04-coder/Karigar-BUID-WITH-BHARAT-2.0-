@@ -64,10 +64,33 @@ async function multipart(req) {
 }
 export async function handleProducts(req,res,{prisma,user,mediaDir=MEDIA_DIR,verifyMedia=verifyMediaEligibility}) {
   const send=(status,data)=>{res.statusCode=status;res.setHeader('Content-Type','application/json');res.setHeader('Cache-Control','no-store');res.end(JSON.stringify(data));};
+  if(!user)return send(401,{error:'Please sign in.'});
   if(user.role!=='ARTISAN'||!user.isActive)return send(403,{error:'An active artisan account is required.'});
+  const productId=new URL(req.url,'http://localhost').pathname.match(/^\/api\/products\/([^/]+)$/)?.[1];
+  if(productId) {
+    try {
+      const product=await prisma.product.findFirst({where:{id:productId,artisanId:user.id,isActive:true}});
+      if(!product)return send(404,{error:'Product unavailable.'});
+      if(req.method==='GET')return send(200,{product:publicProduct(product)});
+      if(req.method==='DELETE') {
+        const result=await prisma.product.updateMany({where:{id:productId,artisanId:user.id,isActive:true},data:{isActive:false}});
+        return result.count?send(200,{archived:true,id:productId}):send(404,{error:'Product unavailable.'});
+      }
+      if(req.method!=='PATCH')return send(405,{error:'Method not allowed.'});
+      let raw='';for await(const chunk of req){raw+=chunk;if(raw.length>50000)return send(413,{error:'Product details are too large.'});}
+      let patch;try{patch=JSON.parse(raw);}catch{return send(400,{error:'Invalid JSON.'});}
+      const fields=['title','category','price','stock','region','dimensions','materials','craft_technique','description','giTag'];
+      if(!patch||Array.isArray(patch)||typeof patch!=='object'||Object.keys(patch).some(key=>!fields.includes(key)))return send(422,{error:'Only listing details can be edited here. Media and evidence are preserved.'});
+      const current=publicProduct(product);
+      const details=validateListing({description:'',region:'',dimensions:'',craft_technique:'',giTag:'',materials:[],...Object.fromEntries(Object.entries(current).filter(([,v])=>v!=null)),...patch});
+      const result=await prisma.product.updateMany({where:{id:productId,artisanId:user.id,isActive:true},data:{title:details.title,category:details.category,price:details.price,stock:details.stock,detailsJson:JSON.stringify({...JSON.parse(product.detailsJson),...details})}});
+      if(!result.count)return send(404,{error:'Product unavailable.'});
+      return send(200,{product:publicProduct(await prisma.product.findUnique({where:{id:productId}}))});
+    }catch(error){console.error('[product actions]',error.name,error.code||'request_failed');return send(error.status||500,{error:error.status?error.message:'Could not update the product. Please try again.'});}
+  }
   const written=[];
   try {
-    if(req.method==='GET')return send(200,{products:(await prisma.product.findMany({where:{artisanId:user.id},orderBy:{createdAt:'desc'}})).map(publicProduct)});
+    if(req.method==='GET')return send(200,{products:(await prisma.product.findMany({where:{artisanId:user.id,isActive:true},orderBy:{createdAt:'desc'}})).map(publicProduct)});
     if(req.method!=='POST')return send(405,{error:'Method not allowed.'});
     const key=req.headers['idempotency-key'];
     if(typeof key!=='string'||! /^[a-zA-Z0-9-]{16,80}$/.test(key))throw new ProductError('A publish request identifier is required.');

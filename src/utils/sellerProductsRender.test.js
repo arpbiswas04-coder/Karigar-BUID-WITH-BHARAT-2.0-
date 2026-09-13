@@ -12,6 +12,7 @@ test('My Products renders nullable seeded and published metadata, totals and ses
   const products=[{id:'seed',title:'Seed bowl',category:'Pottery & Clay',price:450,stock:3,description:null,materials:null,region:null,media:{images:[],primaryImageIndex:0},evidence:{score:40}}, {id:'published',title:'Published basket',category:'Basketry & Natural Fibres',price:700,stock:0,media:{images:['/uploads/products/basket.jpg']},evidence:{score:75}}].map(normalizeSellerProduct);
   const render=props=>renderToStaticMarkup(React.createElement(AuthProvider,null,React.createElement(SellerProvider,null,React.createElement(MemoryRouter,null,React.createElement(ProductsView,props)))));
   const html=render({products});for(const text of ['Seed bowl','Published basket','450','700','40','75','Out of Stock','(2)'])assert.ok(html.includes(text),text);assert.ok(!html.includes('NaN'));assert.ok(html.includes('disabled=""'));
+  const actions=render({products,onAction:()=>{}});for(const label of ['View product: Seed bowl','Edit product: Seed bowl','Delete product: Seed bowl'])assert.ok(actions.includes(label));assert.ok(!actions.includes('disabled=""'));
   const expired=render({products:[],productsAuthRequired:true,productsError:'Your session has expired.'});assert.ok(expired.includes('Sign in again'));assert.ok(expired.includes('role="alert"'));
  }finally{await server.close();delete globalThis.localStorage;delete globalThis.sessionStorage;delete globalThis.document;}
 });

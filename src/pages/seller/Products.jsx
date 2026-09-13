@@ -8,15 +8,17 @@ import { formatNumber } from '../../utils/formatters';
 import { translateCategory } from '../../utils/localizedDisplay';
 import {matchesSellerProduct} from '../../utils/sellerProducts.js';
 import {useAuth} from '../../context/AuthContext';
+import SellerProductAction from '../../components/SellerProductAction';
 import ProductTable from '../../components/ProductTable';
 
 export default function Products() {
   const data=useSeller();
-  const {logout}=useAuth();
-  return <ProductsView {...data} onSignIn={logout}/>;
+  const {logout,token}=useAuth();
+  const [action,setAction]=useState(null);
+  return <><ProductsView {...data} onSignIn={logout} onAction={(mode,p)=>setAction({mode,id:p.id})}/>{action&&<SellerProductAction key={action.id+action.mode} {...action} token={token} onClose={()=>setAction(null)} onSaved={()=>{}} onSignIn={logout}/>}</>;
 }
 
-export function ProductsView({products,productsLoading:loading,productsError:loadError,productsAuthRequired,onSignIn}) {
+export function ProductsView({products,productsLoading:loading,productsError:loadError,productsAuthRequired,onSignIn,onAction}) {
   const { t, i18n } = useTranslation();
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('All');
@@ -110,6 +112,9 @@ export function ProductsView({products,productsLoading:loading,productsError:loa
       <div className="bg-seller-card  rounded-2xl border border-gray-200/90 dark:border-gray-700/80 shadow-2xs overflow-hidden transition-colors">
         <ProductTable
           products={filteredProducts}
+          onViewProduct={onAction?p=>onAction("view",p):undefined}
+          onEditProduct={onAction?p=>onAction("edit",p):undefined}
+          onDeleteProduct={onAction?p=>onAction("delete",p):undefined}
         />
       </div>
     </div>

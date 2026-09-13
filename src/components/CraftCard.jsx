@@ -1,3 +1,4 @@
+import {formatEvidenceScore} from '../utils/evidenceFormat.js';
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { Heart, Plus, Check, ImageOff } from "lucide-react";
@@ -61,7 +62,7 @@ export default function CraftCard({ product }) {
         <h3>
           <Link to={`/product/${product.id}`}>{localizedTitle}</Link>
         </h3>
-        <p>{localizedArtisan}</p><p>{product.reviewsCount ? `${product.rating.toFixed(1)} / 5 ? ${product.reviewsCount} reviews` : "No reviews yet"}</p>
+        <p>{localizedArtisan}</p><p className="text-xs text-on-surface-variant">{Number.isFinite(product.evidence?.score)?`Evidence ${formatEvidenceScore(product.evidence.score)} / 100`:"Not analyzed"}</p><p>{product.reviewsCount ? `${product.rating.toFixed(1)} / 5 ? ${product.reviewsCount} reviews` : "No reviews yet"}</p>
         <p className="craft-card-story">{localizedDescription}</p>
         <div className="craft-card-bottom">
           <strong>{formatCurrency(product.price, i18n.language)}</strong>
