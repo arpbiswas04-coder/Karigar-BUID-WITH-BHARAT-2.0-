@@ -719,6 +719,8 @@
   justify-content: start;
 }
 .craft-card {
+  display: flex;
+  flex-direction: column;
   min-width: 0;
   background: var(--color-surface-container-lowest);
   border: 1px solid var(--color-outline-variant);
@@ -777,6 +779,9 @@
   padding: 5px 9px;
 }
 .craft-card-body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
   padding: 20px;
 }
 .craft-card-body > .eyebrow {
@@ -794,7 +799,15 @@
   color: var(--color-on-surface-variant);
   margin: 0 0 18px;
 }
+.craft-card-body > p:has(+ .evidence-score-badge) {
+  margin-bottom: 0.5rem;
+}
+.craft-card-body > .evidence-score-badge {
+  align-self: flex-start;
+  margin-bottom: 1rem;
+}
 .craft-card-bottom {
+  margin-top: auto;
   display: flex;
   justify-content: space-between;
   align-items: center;

@@ -1,3 +1,6 @@
+import StockBadge from '../../components/StockBadge.jsx';
+import { sortByEvidence } from '../../utils/buyerEvidence.js';
+import EvidenceBadge from '../../components/EvidenceBadge.jsx';
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -12,7 +15,7 @@ export default function Saved() {
   const { t, i18n } = useTranslation();
   const { savedItemIds, toggleSaveItem, addToCart } = useBuyer();
 
-  const savedProducts = PRODUCTS.filter(p => savedItemIds.includes(p.id));
+  const savedProducts = sortByEvidence(PRODUCTS.filter(p => savedItemIds.includes(p.id)));
 
   return (
     <div className="w-full bg-surface py-space-2xl px-space-md lg:px-space-4xl min-h-[80vh]">
@@ -62,6 +65,7 @@ export default function Saved() {
                     alt={p.name}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                   />
+                  <StockBadge stock={p.stock} />
                   <button
                     type="button"
                     onClick={() => toggleSaveItem(p.id)}
@@ -87,6 +91,8 @@ export default function Saved() {
                       {t('buyer.saved.byArtisan', 'By')} {translatePersonName(p.artisanName, i18n.language)}
                     </div>
                   </div>
+
+                  <EvidenceBadge score={p.evidence?.score} />
 
                   <div className="bg-surface-container-low p-space-sm space-y-1">
                     <div className="flex justify-between items-baseline">

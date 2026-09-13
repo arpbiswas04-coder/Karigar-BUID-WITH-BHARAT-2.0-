@@ -1,3 +1,4 @@
+import { sortByEvidence } from '../../utils/buyerEvidence.js';
 import { CRAFT_CATEGORIES, normalizeCraftCategory } from '../../constants/craftCategories.js';
 import React, { useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
@@ -41,7 +42,7 @@ export default function Browse({ makers = false }) {
   const states = [...new Set(items.map(stateName).filter(Boolean))].sort();
   const crafts = CRAFT_CATEGORIES;
 
-  const results = items.filter(item => {
+  const filtered = items.filter(item => {
     if(!makers && params.get("artisan") && item.artisanId!==params.get("artisan"))return false;
     if (state && stateName(item) !== state) return false;
     if (craft && craft !== 'All crafts' && craft !== 'all') {
@@ -79,6 +80,8 @@ export default function Browse({ makers = false }) {
     return true;
   });
 
+  const results = makers ? filtered : sortByEvidence(filtered);
+
   const reset = () => { setQuery(''); setState(''); setCraft(''); };
   return (
     <section className="premium-section browse-directory">
@@ -114,7 +117,7 @@ export default function Browse({ makers = false }) {
               }}
             />
             <div><small>{[translateDistrict(item.district, i18n.language), translateState(item.state, i18n.language)].filter(Boolean).join(', ')}</small><h3>{translatePersonName(item.name || item.fullName, i18n.language)}</h3><p>{translateCraftType(item.craftType, i18n.language)}</p>
-              <p>{item.productCount} products</p>{item.products && item.products.length ? <div className="maker-work-links"><Link to={`/collections?artisan=${encodeURIComponent(item.id)}`}>Browse all products</Link>{item.products.slice(0, 3).map(product => <Link key={product.id} to={`/product/${product.id}`}>{translateCollectionTitle(product.name, i18n.language)} <ArrowRight size={14} /></Link>)}</div> : <span className="maker-coming-soon">No products listed yet</span>}
+              <p>{item.productCount} products</p>{item.products && item.products.length ? <div className="maker-work-links"><Link to={`/collections?artisan=${encodeURIComponent(item.id)}`}>Browse all products</Link>{sortByEvidence(item.products).slice(0, 3).map(product => <Link key={product.id} to={`/product/${product.id}`}>{translateCollectionTitle(product.name, i18n.language)} <ArrowRight size={14} /></Link>)}</div> : <span className="maker-coming-soon">No products listed yet</span>}
             </div>
           </article>
         ) : <CraftCard key={item.id} product={item} />)}

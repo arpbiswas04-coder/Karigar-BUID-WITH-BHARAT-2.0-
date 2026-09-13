@@ -1,3 +1,4 @@
+import { sortByEvidence } from '../../utils/buyerEvidence.js';
 import { CRAFT_CATEGORIES,normalizeCraftCategory } from '../../constants/craftCategories.js';
 import { artisanPortrait } from '../../data/demoImages';
 import React, { useMemo, useState } from "react";
@@ -34,14 +35,14 @@ function StateCollection({ stateSlug }) {
     [budget, setBudget] = useState("");
   const filtered = useMemo(
     () =>
-      products
+      sortByEvidence(products
         .filter(
           (p) =>
             (craft === "all" || normalizeCraftCategory(p.craftCategory) === craft) &&
             (district === "all" || p.district === district) &&
             (!awardOnly || /award/i.test(p.artisanTitle)) &&
             (!budget || p.price <= Number(budget)),
-        )
+        ))
         .sort((a, b) =>
           sort === "low"
             ? a.price - b.price
@@ -49,7 +50,7 @@ function StateCollection({ stateSlug }) {
               ? b.price - a.price
               : sort === "share"
                 ? b.artisanSharePercent - a.artisanSharePercent
-                : b.rating - a.rating,
+                : 0,
         ),
     [products, craft, district, sort, awardOnly, budget],
   );
@@ -148,7 +149,7 @@ function StateCollection({ stateSlug }) {
                 {t("buyer.premium.sort", "Sort by")}
                 <select value={sort} onChange={(e) => setSort(e.target.value)}>
                   <option value="featured">
-                    {t("buyer.premium.topRated", "Top rated")}
+                    Trust Evidence Score: High to Low
                   </option>
                   <option value="low">
                     {t("buyer.stateExplore.sortPriceAsc", "Price: Low to High")}

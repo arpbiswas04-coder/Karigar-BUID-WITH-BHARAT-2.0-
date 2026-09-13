@@ -1,3 +1,5 @@
+import { getRevenueAllocation, formatAllocationMoney } from '../../utils/platformCommission.js';
+import { formatEvidenceScore } from '../../utils/evidenceFormat.js';
 import React, { useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -52,6 +54,7 @@ export default function ProductDetail() {
 
   if(status!=="ready"&&!product)return <div className="premium-section"><p>{status==="error"?"Unable to load product.":"Loading product..."}</p><button onClick={refresh}>Retry</button></div>;
   if (!product) return <div className="premium-section premium-empty"><h1>Craft not found</h1><Link to="/patron">Browse collections</Link></div>;
+  const allocation = getRevenueAllocation(product.price);
   return (
     <div className="flex flex-col w-full bg-surface text-on-surface">
       {/* BREADCRUMB STRIP */}
@@ -135,7 +138,11 @@ export default function ProductDetail() {
               </div>
             </div>
 
-            <div className="bg-surface-container-lowest rounded-2xl p-4 border border-outline-variant"><button onClick={()=>setActiveTab('reviews')}>{product.rating===null?'No reviews yet':`${product.rating.toFixed(1)} / 5`} - {product.reviewsCount} reviews</button><p>KARIGAR Trust Evidence Score: {product.evidence.score===null?'Not analyzed':`${product.evidence.score.toFixed(1)} / 100`}</p><p className="text-xs">This score reflects supporting and transparency evidence for the listing. It is not an authenticity guarantee.</p></div>
+            <section aria-label="Listing evidence" className="bg-emerald-50 dark:bg-emerald-950/40 text-[#14532D] dark:text-emerald-100 rounded-2xl p-4 border border-emerald-200 dark:border-emerald-800 space-y-2">
+              <h2 className="text-xs font-bold uppercase tracking-wider">KARIGAR Trust Evidence Score</h2>
+              <p className="text-3xl font-bold">{Number.isFinite(product.evidence?.score) ? `${formatEvidenceScore(product.evidence.score)} / 100` : 'Not analyzed'}</p>
+              <p className="text-xs">This score reflects supporting and transparency evidence for the listing. It is not an authenticity guarantee.</p>
+            </section>
 
             {/* Pricing Block */}
             <div className="bg-white dark:bg-stone-900 rounded-2xl p-6 shadow-xs flex flex-col gap-4 border border-stone-200/80 dark:border-stone-800">
@@ -157,23 +164,18 @@ export default function ProductDetail() {
                   <span className="font-semibold">{t('buyer.product.fairTradeAllocation', 'Fair-Trade Revenue Allocation')}</span>
                   <span className="text-[#14532D] dark:text-emerald-400 font-bold">{t('buyer.product.transparentLedger', '100% Transparent')}</span>
                 </div>
-                <div className="w-full h-2 bg-stone-200 dark:bg-stone-700 flex overflow-hidden rounded-full">
-                  <div className="bg-[#14532D] dark:bg-emerald-500 h-full" style={{ width: `${product.artisanSharePercent}%` }} />
-                  <div className="bg-[#C2410C] h-full" style={{ width: '5%' }} />
-                  <div className="bg-stone-400 dark:bg-stone-500 h-full" style={{ width: '5%' }} />
+                <div className="w-full h-2 bg-stone-200 dark:bg-stone-700 flex overflow-hidden rounded-full" aria-hidden="true">
+                  <div className="bg-[#14532D] dark:bg-emerald-500 h-full" style={{ width: `${allocation.artisanPercent}%` }} />
+                  <div className="bg-stone-400 dark:bg-stone-500 h-full" style={{ width: `${allocation.commissionPercent}%` }} />
                 </div>
-                <div className="grid grid-cols-3 gap-2 text-xs pt-1">
+                <div className="grid grid-cols-2 gap-3 text-xs pt-1">
                   <div>
-                    <span className="font-bold text-[#14532D] dark:text-emerald-400">{formatCurrency(product.artisanShareAmount, i18n.language)} ({formatNumber(product.artisanSharePercent, i18n.language)}%)</span>
-                    <span className="block text-stone-500 dark:text-stone-400 text-[10px] mt-0.5">{t('buyer.product.directToArtisan', 'Direct to')} {product.artisanName}</span>
+                    <span className="font-bold text-[#14532D] dark:text-emerald-400">{formatAllocationMoney(allocation.artisanAmount, i18n.language)} ({allocation.artisanPercent}%)</span>
+                    <span className="block text-stone-600 dark:text-stone-300 text-[10px] mt-0.5">Artisan payout</span>
                   </div>
                   <div>
-                    <span className="font-bold text-[#C2410C]">{formatCurrency(product.clusterFundAmount || 2400, i18n.language)} ({formatNumber(5, i18n.language)}%)</span>
-                    <span className="block text-stone-500 dark:text-stone-400 text-[10px] mt-0.5">{t('buyer.product.clusterFund', 'Cluster Fund')}</span>
-                  </div>
-                  <div>
-                    <span className="font-bold text-stone-700 dark:text-stone-300">{formatCurrency(product.platformFeeAmount || 2400, i18n.language)} ({formatNumber(5, i18n.language)}%)</span>
-                    <span className="block text-stone-500 dark:text-stone-400 text-[10px] mt-0.5">{t('buyer.product.registryEscrow', 'Registry & Vault Escrow')}</span>
+                    <span className="font-bold text-stone-700 dark:text-stone-200">{formatAllocationMoney(allocation.commissionAmount, i18n.language)} ({allocation.commissionPercent}%)</span>
+                    <span className="block text-stone-600 dark:text-stone-300 text-[10px] mt-0.5">KARIGAR platform commission</span>
                   </div>
                 </div>
               </div>

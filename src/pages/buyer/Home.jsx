@@ -1,3 +1,4 @@
+import { sortByEvidence } from '../../utils/buyerEvidence.js';
 import { CRAFT_CATEGORIES, normalizeCraftCategory } from '../../constants/craftCategories.js';
 import { artisanPortrait } from '../../data/demoImages';
 import { craftCategoryMap } from '../../constants/craftImageMap.js';
@@ -43,7 +44,7 @@ export default function Home() {
   const collectionItems = PRODUCTS;
 
   const filtered = useMemo(() => {
-    return collectionItems.filter((item) => {
+    return sortByEvidence(collectionItems.filter((item) => {
       if (category !== "all" && category !== "All crafts") {
         const craft = item.craftType || item.craftCategory || item.craftLineage;
         const parentCategory =
@@ -82,7 +83,7 @@ export default function Home() {
       }
 
       return true;
-    });
+    }));
   }, [collectionItems, category, query]);
   const previewCollections = Array.isArray(filtered) ? filtered.slice(0, 8) : [];
   const states = [...STATES_CRAFTS].sort(
