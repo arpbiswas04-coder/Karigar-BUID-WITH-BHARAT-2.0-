@@ -906,6 +906,4 @@ At the same time, artisans gain an opportunity to compete through **craftsmanshi
 
 ---
 
-## KARIGAR
-### Stories You Can Hold
 Made by TEAM 4 LOOPS
